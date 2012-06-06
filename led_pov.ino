@@ -102,7 +102,6 @@ unsigned int data_size;
 
 void setup()
 {
-  Serial.begin(115200);
   PORTB = 0x3F;
   PORTC = 0x3F;
   PORTD = 0xF0;
@@ -111,7 +110,6 @@ void setup()
   DDRC = 0x3F;
   DDRD = 0xF0;
 
-  Serial.println(sizeof(FontFile) / 2);
   data_size = sizeof(FontFile);
 }
 
@@ -126,8 +124,6 @@ void loop()
 
     while (micros() < (new_time + wait_time)) if ((PIND & 0x0C) == 0x04)  break ;
 
-    //delay(wait_time/1000);
-
     data_start = micros();
     DP_L();
     data_end = micros();
@@ -141,8 +137,6 @@ void loop()
 
     while (micros() < (new_time + wait_time)) if ((PIND & 0x0C) == 0x08)  break ;
 
-    //delay(wait_time/1000);
-
     data_start = micros();
     DP_R();
     data_end = micros();
@@ -151,45 +145,42 @@ void loop()
 
 }
 
-void DP_R()
+void clean_line(void)
 {
-  for (int i = 0; i < data_size; i += 2) {
-    if ((PIND & 0x0C) == 0x08) {
-      PORTD = ~0;
-      PORTB = ~0;
-      PORTC = ~0;
-      return;
-    }
-    PORTD = FontFile[i + 1] << 4;         // PD4 : lsb
-    PORTB = ((FontFile[i] << 4) & 0x30)  | ((FontFile[i + 1] >> 4) & 0x0F);
-    PORTC = (FontFile[i] >> 2) & 0x3F;     // PC5 : msb
-    delay(1);
-    //delayMicroseconds(700);
-
-  }
   PORTD = ~0;
   PORTB = ~0;
   PORTC = ~0;
 }
 
+void draw_line(byte msb, byte lsb)
+{
+  PORTD = lsb << 4;         // PD4 : lsb
+  PORTB = ((msb << 4) & 0x30)  | ((lsb >> 4) & 0x0F);
+  PORTC = (msb >> 2) & 0x3F;     // PC5 : msb
+}
+
+void DP_R()
+{
+  for (int i = 0; i < data_size; i += 2) {
+    if ((PIND & 0x0C) == 0x08)
+      break;
+
+    draw_line(FontFile[i], FontFile[i + 1]);
+    delay(1);
+  }
+  clean_line();
+}
+
 void DP_L()
 {
   for (int i = data_size - 2; i > 0; i -= 2) {
-    if ((PIND & 0x0C) == 0x04) {
-      PORTD = ~0;
-      PORTB = ~0;
-      PORTC = ~0;
-      return;
-    }
-    PORTD = FontFile[i + 1] << 4;         // PD4 : lsb
-    PORTB = ((FontFile[i] << 4) & 0x30)  | ((FontFile[i + 1] >> 4) & 0x0F);
-    PORTC = (FontFile[i] >> 2) & 0x3F;     // PC5 : msb
+    if ((PIND & 0x0C) == 0x04)
+      break;
+
+    draw_line(FontFile[i], FontFile[i + 1]);
     delay(1);
-    //delayMicroseconds(700);
   }
-  PORTD = ~0;
-  PORTB = ~0;
-  PORTC = ~0;
+  clean_line();
 }
 
 
