@@ -36,6 +36,7 @@ unsigned long data_start;
 void dummy_banner();
 bool load_banner();
 void store_banner();
+void show_progress(int, int);
 
 void setup()
 {
@@ -58,16 +59,15 @@ void setup()
 void loop()
 {
   if (Serial.available() > 1 && Serial.read() == '#') {
-    delay(10000);
     banner_buffer_len = 0;
     banner_buffer_len |= Serial.read() << 8;
     banner_buffer_len |= Serial.read();
 
-    if (banner_buffer_len > MAX_EEPROM_LEN) {
-      dummy_banner();
-    } else {
-      for (int i = 0; i < banner_buffer_len; i++)
+    if (banner_buffer_len <= MAX_EEPROM_LEN) {
+      for (int i = 0; i < banner_buffer_len; i++) {
         banner_buffer[i] = Serial.read();
+        show_progress(i, banner_buffer_len);
+      }
 
       store_banner();
     }
@@ -115,6 +115,15 @@ void draw_line(byte msb, byte lsb)
   PORTD = lsb << 4;         // PD4 : lsb
   PORTB = ((msb << 4) & 0x30)  | ((lsb >> 4) & 0x0F);
   PORTC = (msb >> 2) & 0x3F;     // PC5 : msb
+}
+
+void show_progress(int p, int total)
+{
+  int pMask = 0;
+  for (int i = 0; i < (p * 16 / total); i++)
+    pMask |= (1 << i);
+
+  draw_line((pMask >> 8) & 0xff, pMask & 0xff);
 }
 
 void DP_R()
