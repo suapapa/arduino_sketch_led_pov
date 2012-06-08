@@ -1,8 +1,8 @@
 #include <EEPROM.h>
-// ATmega168 and ATmega8 has 4096 bytes of EEPROM
+// ATmega168 and ATmega8 has 512 bytes of EEPROM
 
 // first 2 bytes for length, last 1 byte for checksum
-#define MAX_EEPROM_LEN (4096 - 2 - 1)
+#define MAX_EEPROM_LEN (512 - 2 - 1)
 
 unsigned int banner_buffer_len = 0;
 byte banner_buffer[MAX_EEPROM_LEN] = {
