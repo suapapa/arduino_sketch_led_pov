@@ -15,3 +15,6 @@ Also can build and upload via arscons.
 
     $ scons upload
 
+## References
+
+- [Original source and sch of LED_POV](http://cafe.naver.com/arduinostory/8825)
